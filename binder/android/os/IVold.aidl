@@ -91,6 +91,7 @@ interface IVold {
 
     void createUserStorageKeys(int userId, boolean ephemeral);
     void destroyUserStorageKeys(int userId);
+    void destroyUserStorageKeys2(int userId, boolean evict);
 
     void setCeStorageProtection(int userId, in byte[] secret);
 
@@ -137,6 +138,8 @@ interface IVold {
     void bindMount(@utf8InCpp String sourceDir, @utf8InCpp String targetDir);
 
     void destroyDsuMetadataKey(@utf8InCpp String dsuSlot);
+    void destroyMetadataKey(@utf8InCpp String mountPointPath);
+    void destroySystemStorageKey();
 
     long getStorageSize();
 
@@ -150,6 +153,8 @@ interface IVold {
     boolean setWriteBoosterBufferFlush(boolean enable);
     boolean setWriteBoosterBufferOn(boolean enable);
     int getWriteBoosterLifeTimeEstimate();
+
+    @utf8InCpp String[] checkNonCeStorageKeys();
 
     const int FSTRIM_FLAG_DEEP_TRIM = 1;
 

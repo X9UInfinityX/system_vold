@@ -155,6 +155,27 @@ status_t VoldNativeService::dump(int fd, const Vector<String16>& /* args */) {
     return NO_ERROR;
 }
 
+binder::Status VoldNativeService::checkNonCeStorageKeys(std::vector<std::string>* _aidl_return) {
+    ENFORCE_SYSTEM_OR_ROOT;
+
+    const char *dirs[] = {
+        "/data/misc/vold/user_keys/de/0",
+        "/data/unencrypted/key",
+        "/metadata/vold/metadata_encryption/key",
+    };
+
+    std::vector<std::string> res;
+
+    for (const char *dir : dirs) {
+        android::vold::KeyBuffer key_buffer;
+        if (android::vold::retrieveKey(dir, android::vold::kEmptyAuthentication, &key_buffer)) {
+            res.push_back(std::string(dir));
+        }
+    }
+    *_aidl_return = res;
+    return Ok();
+}
+
 binder::Status VoldNativeService::setListener(
         const android::sp<android::os::IVoldListener>& listener) {
     ENFORCE_SYSTEM_OR_ROOT;
@@ -701,7 +722,14 @@ binder::Status VoldNativeService::destroyUserStorageKeys(int32_t userId) {
     ENFORCE_SYSTEM_OR_ROOT;
     ACQUIRE_CRYPT_LOCK;
 
-    return translateBool(fscrypt_destroy_user_keys(userId));
+    return translateBool(fscrypt_destroy_user_keys(userId, true));
+}
+
+binder::Status VoldNativeService::destroyUserStorageKeys2(int32_t userId, bool evict) {
+    ENFORCE_SYSTEM_OR_ROOT;
+    ACQUIRE_CRYPT_LOCK;
+
+    return translateBool(fscrypt_destroy_user_keys(userId, evict));
 }
 
 binder::Status VoldNativeService::setCeStorageProtection(int32_t userId,
@@ -1025,6 +1053,20 @@ binder::Status VoldNativeService::destroyDsuMetadataKey(const std::string& dsuSl
     ACQUIRE_LOCK;
 
     return translateBool(destroy_dsu_metadata_key(dsuSlot));
+}
+
+binder::Status VoldNativeService::destroyMetadataKey(const std::string& mountPointPath) {
+    ENFORCE_SYSTEM_OR_ROOT;
+    ACQUIRE_CRYPT_LOCK;
+
+    return translateBool(destroy_mountpoint_metadata_key(mountPointPath));
+}
+
+binder::Status VoldNativeService::destroySystemStorageKey() {
+    ENFORCE_SYSTEM_OR_ROOT;
+    ACQUIRE_CRYPT_LOCK;
+
+    return translateBool(fscrypt_destroy_system_key());
 }
 
 binder::Status VoldNativeService::getStorageSize(int64_t* storageSize) {

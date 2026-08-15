@@ -723,16 +723,26 @@ static bool evict_user_keys(std::map<userid_t, UserPolicies>& policy_map, userid
     return success;
 }
 
+bool fscrypt_destroy_system_key() {
+    bool res = android::vold::destroyKey(device_key_path);
+    if (android::vold::pathExists(device_key_temp)) {
+        res &= android::vold::destroyKey(device_key_temp);
+    }
+    return res;
+}
+
 // Evicts and destroys all CE and DE keys for a user.  This is called when the user is removed.
-bool fscrypt_destroy_user_keys(userid_t user_id) {
+bool fscrypt_destroy_user_keys(userid_t user_id, bool evict) {
     LOG(DEBUG) << "fscrypt_destroy_user_keys(" << user_id << ")";
     if (!IsFbeEnabled()) {
         return true;
     }
     bool success = true;
 
-    success &= evict_user_keys(s_ce_policies, user_id);
-    success &= evict_user_keys(s_de_policies, user_id);
+    if (evict) {
+        success &= evict_user_keys(s_ce_policies, user_id);
+        success &= evict_user_keys(s_de_policies, user_id);
+    }
 
     if (!s_ephemeral_users.erase(user_id)) {
         auto ce_path = get_ce_key_directory_path(user_id);

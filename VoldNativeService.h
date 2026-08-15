@@ -118,6 +118,7 @@ class VoldNativeService : public BinderService<VoldNativeService>, public os::Bn
 
     binder::Status createUserStorageKeys(int32_t userId, bool ephemeral);
     binder::Status destroyUserStorageKeys(int32_t userId);
+    binder::Status destroyUserStorageKeys2(int32_t userId, bool evict);
 
     binder::Status setCeStorageProtection(int32_t userId, const std::vector<uint8_t>& secret);
 
@@ -173,6 +174,10 @@ class VoldNativeService : public BinderService<VoldNativeService>, public os::Bn
     binder::Status setWriteBoosterBufferFlush(bool enable, bool* _aidl_return);
     binder::Status setWriteBoosterBufferOn(bool enable, bool* _aidl_return);
     binder::Status getWriteBoosterLifeTimeEstimate(int32_t* _aidl_return);
+
+    binder::Status checkNonCeStorageKeys(std::vector<std::string>* _aidl_return) override;
+    binder::Status destroyMetadataKey(const std::string& mountPointPath) override;
+    binder::Status destroySystemStorageKey() override;
 };
 
 }  // namespace vold
